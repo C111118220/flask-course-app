@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>課程資訊展示</title>
+    
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    
+    <!-- 自訂 CSS (確保 Flask 正確載入) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="text-center">課程資訊展示</h2>
+        <div class="card p-4 shadow-sm">
+            <p><strong>授課教師：</strong> <span id="teacher"></span></p>
+            <p><strong>課程名稱：</strong> <span id="course_name"></span></p>
+            <p><strong>Gmail：</strong> <span id="teacher_email">jscheng@nkust.edu.tw</span></p>
+            <p><strong>中文教學目標：</strong></p>
+            <blockquote id="description"></blockquote>
+            <p><strong>開課班級：</strong> <span id="class"></span></p>
+            <p><strong>評分標準：</strong> <span id="grading"></span></p>
+            <p><strong>學分數：</strong> <span id="credits"></span></p>
+            <p><strong>授課時數：</strong> <span id="hours"></span></p>
+            <p><strong>課時間：</strong> <span id="schedule"></span></p>
+            <p><strong>教室位址：</strong> <span id="location"></span></p>
+        </div>
+
+        <h3 class="text-center mt-5">學生名單</h3>
+        <div class="table-container">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>學號</th>
+                        <th>姓名</th>
+                        <th>性別</th>
+                    </tr>
+                </thead>
+                <tbody id="student_table">
+                    <!-- 這裡會用 JavaScript 自動填入學生資料 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // 請求 API 並顯示資料
+            fetch('/get_course_data')
+                .then(response => response.json())
+                .then(data => {
+                    // 填入課程資訊
+                    $("#teacher").text(data.teacher);
+                    $("#course_name").text(data.course_name);
+                    $("#description").text(data.description);
+                    $("#class").text(data.class);
+                    $("#grading").text(data.grading);
+                    $("#credits").text(data.credits);
+                    $("#hours").text(data.hours);
+                    $("#schedule").text(data.schedule);
+                    $("#location").text(data.location);
+
+                    // 填入學生名單
+                    let student_table = $("#student_table");
+                    student_table.empty();
+                    data.students.forEach(student => {
+                        let row = `<tr>
+                            <td>${student.account}</td>
+                            <td>${student.name}</td>
+                            <td>${student.gender}</td>
+                        </tr>`;
+                        student_table.append(row);
+                    });
+                })
+                .catch(error => console.error('發生錯誤:', error));
+        });
+    </script>
+</body>
+</html>
+
+
+
