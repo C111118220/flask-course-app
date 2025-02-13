@@ -9,7 +9,7 @@ app = Flask(__name__, template_folder="templates")  # ✅ 指定 templates 資�
 def get_db_connection():
     try:
         conn = pymysql.connect(
-            host=os.getenv("DB_HOST", "localhost"),
+            host=os.getenv("DB_HOST", "containers-us-west-xxx.railway.app"),
             user=os.getenv("DB_USER", "root"),
             password=os.getenv("DB_PASSWORD", "12345678"),
             database=os.getenv("DB_NAME", "faq_db"),
