@@ -7,21 +7,23 @@ app = Flask(__name__, template_folder="templates")  # ✅ 指定 templates 資�
 
 # ✅ 建立資料庫連線（使用 Railway 環境變數）
 def get_db_connection():
-    conn = pymysql.connect(
-        host=os.getenv("DB_HOST"),         # ✅ 從環境變數讀取
-        user=os.getenv("DB_USER"),         # ✅ 從環境變數讀取
-        password=os.getenv("DB_PASSWORD"), # ✅ 從環境變數讀取
-        database=os.getenv("DB_NAME"),     # ✅ 從環境變數讀取
-        cursorclass=pymysql.cursors.DictCursor,
-        charset='utf8mb4'
-    )
-    
-    with conn.cursor() as cursor:
-        cursor.execute("SET NAMES utf8mb4;")
-        cursor.execute("SET CHARACTER SET utf8mb4;")
-        cursor.execute("SET character_set_connection=utf8mb4;")
-    
-    return conn
+    try:
+        conn = pymysql.connect(
+            host=os.getenv("DB_HOST", "localhost"),
+            user=os.getenv("DB_USER", "root"),
+            password=os.getenv("DB_PASSWORD", "12345678"),
+            database=os.getenv("DB_NAME", "faq_db"),
+            cursorclass=pymysql.cursors.DictCursor,
+            charset='utf8mb4'
+        )
+        with conn.cursor() as cursor:
+            cursor.execute("SET NAMES utf8mb4;")
+            cursor.execute("SET CHARACTER SET utf8mb4;")
+            cursor.execute("SET character_set_connection=utf8mb4;")
+        return conn
+    except pymysql.MySQLError as e:
+        print(f"❌ 資料庫連線錯誤: {str(e)}")  # ✅ 在伺服器 log 顯示錯誤
+        return None
 
 @app.route('/')
 def home():
@@ -29,12 +31,14 @@ def home():
 
 @app.route('/get_course_data', methods=['GET'])
 def get_course_data():
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({"error": "❌ 連線資料庫失敗，請檢查環境變數！"}), 500
 
-        cursor.execute("SELECT account, name, gender FROM merged_data")
-        students = cursor.fetchall()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT account, name, gender FROM merged_data")
+            students = cursor.fetchall()
 
         course_data = {
             "teacher": "鄭進興",
@@ -54,14 +58,14 @@ def get_course_data():
         return response
 
     except pymysql.MySQLError as e:
-        return jsonify({"error": f"資料庫錯誤: {str(e)}"}), 500
+        return jsonify({"error": f"❌ 資料庫查詢錯誤: {str(e)}"}), 500
 
     finally:
-        cursor.close()
-        conn.close()
+        conn.close()  # ✅ 確保關閉資料庫連線
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
+
 
 
 
