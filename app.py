@@ -1,18 +1,19 @@
 from flask import Flask, render_template, jsonify
 import pymysql
 import json
+import os  # ✅ 加入 os 來讀取環境變數
 
 app = Flask(__name__, template_folder="templates")  # ✅ 指定 templates 資料夾
 
-# ✅ 建立資料庫連線
+# ✅ 建立資料庫連線（使用 Railway 環境變數）
 def get_db_connection():
     conn = pymysql.connect(
-        host="localhost",        
-        user="root",             
-        password="12345678",     
-        database="faq_db",       
+        host=os.getenv("DB_HOST"),         # ✅ 從環境變數讀取
+        user=os.getenv("DB_USER"),         # ✅ 從環境變數讀取
+        password=os.getenv("DB_PASSWORD"), # ✅ 從環境變數讀取
+        database=os.getenv("DB_NAME"),     # ✅ 從環境變數讀取
         cursorclass=pymysql.cursors.DictCursor,
-        charset='utf8mb4'       
+        charset='utf8mb4'
     )
     
     with conn.cursor() as cursor:
@@ -61,6 +62,7 @@ def get_course_data():
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
+
 
 
 
