@@ -1,7 +1,7 @@
 from flask import Flask, render_template, jsonify
 import pymysql
 import json
-import os  # ✅ 加入 os 來讀取環境變數
+import os  # ✅ 讀取環境變數
 
 app = Flask(__name__, template_folder="templates")  # ✅ 指定 templates 資料夾
 
@@ -13,6 +13,7 @@ def get_db_connection():
             user=os.getenv("DB_USER", "root"),
             password=os.getenv("DB_PASSWORD", "12345678"),
             database=os.getenv("DB_NAME", "faq_db"),
+            port=int(os.getenv("DB_PORT", 3306)),  # ✅ Railway 可能使用不同 Port
             cursorclass=pymysql.cursors.DictCursor,
             charset='utf8mb4'
         )
@@ -22,7 +23,7 @@ def get_db_connection():
             cursor.execute("SET character_set_connection=utf8mb4;")
         return conn
     except pymysql.MySQLError as e:
-        print(f"❌ 資料庫連線錯誤: {str(e)}")  # ✅ 在伺服器 log 顯示錯誤
+        print(f"❌ 資料庫連線錯誤: {str(e)}")  # ✅ 顯示錯誤日誌
         return None
 
 @app.route('/')
@@ -43,7 +44,7 @@ def get_course_data():
         course_data = {
             "teacher": "鄭進興",
             "course_name": "企業資訊網路",
-            "description": "教導學生了解網際網路運作原理，建立 TCP/IP 網際網路通信協定之整體概念。訓練學生熟悉區域網路、網路設備之規劃與作設定，從概念中掌握企業網路規劃及建置實務。培養學生具備企業網路管理技能，奠定未來進入工作職場擔任網管工程師之本職學能。",
+            "description": "教導學生了解網際網路運作原理，建立 TCP/IP 網際網路通信協定之整體概念...",
             "class": "資管系三乙",
             "grading": "平時考試: 30% | 期中考試: 30% | 期末考試: 40%",
             "credits": 3.0,
@@ -64,7 +65,8 @@ def get_course_data():
         conn.close()  # ✅ 確保關閉資料庫連線
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), debug=True)  # ✅ Railway 可能使用不同的 PORT
+
 
 
 
