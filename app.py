@@ -13,7 +13,7 @@ def get_db_connection():
         if not DATABASE_URL:
             raise ValueError("❌ 環境變數 DATABASE_URL 未設定！")
 
-        conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+        conn = psycopg2.connect(DATABASE_URL, sslmode='require')  # ✅ Render 需要 SSL
         return conn
     except Exception as e:
         print(f"❌ 資料庫連線錯誤: {str(e)}")
@@ -55,8 +55,26 @@ def get_course_data():
     finally:
         conn.close()  # ✅ 確保關閉資料庫連線
 
+# ✅ 新增測試資料庫連線的 API
+@app.route('/test_db')
+def test_db():
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({"error": "❌ 無法連接到資料庫，請檢查 DATABASE_URL"}), 500
+
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT 1")  # 測試查詢
+            result = cursor.fetchone()
+        return jsonify({"message": "✅ 成功連接到資料庫", "result": result})
+    except psycopg2.Error as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), debug=True)  # ✅ Railway / Render 會使用不同的 PORT
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), debug=True)  # ✅ Render / Railway 會使用不同的 PORT
+
 
 
 
