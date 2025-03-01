@@ -1,34 +1,27 @@
 from flask import Flask, render_template, jsonify
-import pymysql
+import psycopg2  # ✅ 改用 PostgreSQL
+import psycopg2.extras  # ✅ 讓 cursor 回傳字典
 import json
-import os  # ✅ 讀取環境變數
+import os
 
-app = Flask(__name__, template_folder="templates")  # ✅ 指定 templates 資料夾
+app = Flask(__name__, template_folder="templates")  # ✅ 確保 templates 存在
 
-# ✅ 建立資料庫連線（使用 Railway 環境變數）
+# ✅ 建立資料庫連線（使用 Render 提供的 PostgreSQL）
 def get_db_connection():
     try:
-        conn = pymysql.connect(
-            host=os.getenv("DB_HOST", "localhost"),
-            user=os.getenv("DB_USER", "root"),
-            password=os.getenv("DB_PASSWORD", "12345678"),
-            database=os.getenv("DB_NAME", "faq_db"),
-            port=int(os.getenv("DB_PORT", 3306)),  # ✅ Railway 可能使用不同 Port
-            cursorclass=pymysql.cursors.DictCursor,
-            charset='utf8mb4'
-        )
-        with conn.cursor() as cursor:
-            cursor.execute("SET NAMES utf8mb4;")
-            cursor.execute("SET CHARACTER SET utf8mb4;")
-            cursor.execute("SET character_set_connection=utf8mb4;")
+        DATABASE_URL = os.getenv("DATABASE_URL")
+        if not DATABASE_URL:
+            raise ValueError("❌ 環境變數 DATABASE_URL 未設定！")
+
+        conn = psycopg2.connect(DATABASE_URL, sslmode='require')
         return conn
-    except pymysql.MySQLError as e:
-        print(f"❌ 資料庫連線錯誤: {str(e)}")  # ✅ 顯示錯誤日誌
+    except Exception as e:
+        print(f"❌ 資料庫連線錯誤: {str(e)}")
         return None
 
 @app.route('/')
 def home():
-    return render_template("index.html")  # ✅ 確保載入前端頁面
+    return render_template("index.html")  # ✅ 確保 index.html 存在
 
 @app.route('/get_course_data', methods=['GET'])
 def get_course_data():
@@ -37,9 +30,9 @@ def get_course_data():
         return jsonify({"error": "❌ 連線資料庫失敗，請檢查環境變數！"}), 500
 
     try:
-        with conn.cursor() as cursor:
-            cursor.execute("SELECT account, name, gender FROM merged_data")
-            students = cursor.fetchall()
+        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
+            cursor.execute("SELECT account, name, gender FROM merged_data")  # ✅ 確保這張表存在！
+            students = [dict(row) for row in cursor.fetchall()]  # ✅ 直接轉換為字典
 
         course_data = {
             "teacher": "鄭進興",
@@ -54,18 +47,18 @@ def get_course_data():
             "students": students
         }
 
-        json_data = json.dumps(course_data, ensure_ascii=False)
-        response = app.response_class(json_data, content_type="application/json; charset=utf-8")
-        return response
+        return jsonify(course_data)  # ✅ 直接用 jsonify 回傳 JSON
 
-    except pymysql.MySQLError as e:
+    except Exception as e:
         return jsonify({"error": f"❌ 資料庫查詢錯誤: {str(e)}"}), 500
 
     finally:
         conn.close()  # ✅ 確保關閉資料庫連線
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), debug=True)  # ✅ Railway 可能使用不同的 PORT
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), debug=True)  # ✅ Railway / Render 會使用不同的 PORT
+
+
 
 
 
