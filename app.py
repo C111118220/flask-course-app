@@ -31,7 +31,7 @@ db = SQLAlchemy(app)
 
 # ✅ 定義 SQLAlchemy Model
 class Student(db.Model):
-    __tablename__ = 'merged_data'
+    __tablename__ = 'students'
     account = db.Column(db.String, primary_key=True)
     name = db.Column(db.String, nullable=False)
     gender = db.Column(db.String, nullable=False)
