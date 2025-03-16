@@ -72,7 +72,7 @@ def get_course_data():
     try:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
             # 確認 students 表存在，欄位正確
-            cursor.execute("SELECT account, name, gender FROM students")
+            cursor.execute("SELECT student_id AS account, name, gender FROM students")
             students = [dict(row) for row in cursor.fetchall()]
 
         course_data = {
