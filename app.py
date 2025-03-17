@@ -5,7 +5,7 @@ import psycopg2.extras
 import os
 from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
 
-# 初始化 Flask
+# ✅ 初始化 Flask
 app = Flask(__name__, template_folder="templates")  # 確保 templates 目錄存在
 
 # ✅ 處理 DATABASE_URL，保證帶上 sslmode=require
@@ -20,7 +20,7 @@ def ensure_sslmode(url):
     new_query = urlencode(query, doseq=True)
     return urlunparse(parsed._replace(query=new_query))
 
-# 讀取 DATABASE_URL 環境變數
+# ✅ 讀取 DATABASE_URL 環境變數
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 # ✅ 如果沒設定就直接報錯
@@ -36,12 +36,12 @@ print(f"📌 最終 DATABASE_URL: {DATABASE_URL}")
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# 初始化 SQLAlchemy
+# ✅ 初始化 SQLAlchemy
 db = SQLAlchemy(app)
 
-# ✅ 定義 SQLAlchemy Model
+# ✅ 定義 SQLAlchemy Model（非必要，但保留）
 class Student(db.Model):
-    __tablename__ = 'students'  # 表名
+    __tablename__ = 'students'  # 資料表名稱
     account = db.Column(db.String, primary_key=True)
     name = db.Column(db.String, nullable=False)
     gender = db.Column(db.String, nullable=False)
@@ -50,7 +50,7 @@ class Student(db.Model):
 def get_db_connection():
     try:
         print("🔍 嘗試連接資料庫...")
-        conn = psycopg2.connect(DATABASE_URL)  # URL 已經含 sslmode=require，不用額外加
+        conn = psycopg2.connect(DATABASE_URL)  # URL 已經含 sslmode=require
         print("✅ 成功連接到資料庫！")
         return conn
     except Exception as e:
@@ -62,7 +62,7 @@ def get_db_connection():
 def home():
     return render_template("index.html")  # 確保 templates/index.html 存在
 
-# ✅ 取得課程與學生資料 API
+# ✅ 課程資訊與學生資料 API
 @app.route('/get_course_data', methods=['GET'])
 def get_course_data():
     conn = get_db_connection()
@@ -71,22 +71,30 @@ def get_course_data():
 
     try:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
-            # 確認 students 表存在，欄位正確
+            # 查詢學生名單
             cursor.execute("SELECT student_id AS account, name, gender FROM students")
             students = [dict(row) for row in cursor.fetchall()]
 
-        course_data = {
-            "teacher": "鄭進興",
-            "course_name": "企業資訊網路",
-            "description": "教導學生了解網際網路運作原理，建立 TCP/IP 網際網路通信協定之整體概念...",
-            "class": "資管系三乙",
-            "grading": "平時考試: 30% | 期中考試: 30% | 期末考試: 40%",
-            "credits": 3.0,
-            "hours": 3.0,
-            "schedule": "星期一 6-8 節",
-            "location": "C218",
-            "students": students
-        }
+            # 課程資訊
+            course_data = {
+                "teacher": "鄭進興",
+                "course_name": "企業資訊網路",
+                "email": "jscheng@nkust.edu.tw",
+                "description": (
+                    "教導學生瞭解網際網路運作原理，建立 TCP/IP 網際網路通信協定之整體概念。"
+                    "訓練學生熟悉區域網路、網路設備之規劃與操作。"
+                    "使學生瞭解企業網路架構規劃及建置實務，"
+                    "培養學生具備企業網路管理技能，"
+                    "進未來未進入工作職場，能勝任企業網路正確建置之本職學能。"
+                ),
+                "class": "資管系三乙",
+                "grading": "平時考試: 30% | 期中考試: 30% | 期末考試: 40%",
+                "credits": 3.0,
+                "hours": 3.0,
+                "schedule": "星期一 6-8 節",
+                "location": "C218",
+                "students": students
+            }
 
         return jsonify(course_data)
 
@@ -106,19 +114,27 @@ def test_db():
 
     try:
         with conn.cursor() as cursor:
-            cursor.execute("SELECT 1")  # 單純測試連線
+            cursor.execute("SELECT 1")  # 單純測試
             result = cursor.fetchone()
         return jsonify({"message": "✅ 成功連接到資料庫", "result": result})
+
     except psycopg2.Error as e:
         print(f"❌ 測試查詢錯誤: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
     finally:
         conn.close()
 
-# ✅ 啟動 Flask 應用
+# ✅ 健康檢查路由（Render Health Check 使用）
+@app.route('/health')
+def health():
+    return "OK", 200
+
+# ✅ 啟動 Flask 應用（for local 測試）
 if __name__ == '__main__':
-    port = int(os.getenv("PORT", 5000))  # 支援 Heroku / Render 動態 port
+    port = int(os.getenv("PORT", 5000))  # Render / Heroku 動態 port
     app.run(host="0.0.0.0", port=port, debug=True)
+
 
 
 
