@@ -15,13 +15,14 @@
 </head>
 <body>
     <div class="container mt-5">
-        <h2 class="text-center">課程資訊展示</h2>
-        <div class="card p-4 shadow-sm">
+        <h2 class="text-center mb-4">課程資訊展示</h2>
+
+        <div class="card p-4 shadow-sm mb-5">
             <p><strong>授課教師：</strong> <span id="teacher"></span></p>
             <p><strong>課程名稱：</strong> <span id="course_name"></span></p>
             <p><strong>Gmail：</strong> <span id="teacher_email">jscheng@nkust.edu.tw</span></p>
             <p><strong>中文教學目標：</strong></p>
-            <blockquote id="description"></blockquote>
+            <blockquote id="description" class="blockquote"></blockquote>
             <p><strong>開課班級：</strong> <span id="class"></span></p>
             <p><strong>評分標準：</strong> <span id="grading"></span></p>
             <p><strong>學分數：</strong> <span id="credits"></span></p>
@@ -30,10 +31,10 @@
             <p><strong>教室位址：</strong> <span id="location"></span></p>
         </div>
 
-        <h3 class="text-center mt-5">學生名單</h3>
-        <div class="table-container">
-            <table class="table table-bordered">
-                <thead>
+        <h3 class="text-center mb-4">學生名單</h3>
+        <div class="table-responsive mb-5">
+            <table class="table table-bordered text-center align-middle">
+                <thead class="table-primary">
                     <tr>
                         <th>學號</th>
                         <th>姓名</th>
@@ -45,8 +46,21 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- ✅ 校園資訊網按鈕 (放在最下方) -->
+        <div class="text-center mb-4">
+            <a href="https://c111118220.github.io/html/index.html" target="_blank" class="btn btn-primary btn-lg">
+                校園資訊網
+            </a>
+        </div>
+
+        <!-- ✅ Footer 區塊 -->
+        <footer class="text-center text-muted mb-3">
+            <p>© 2025 課程資訊展示系統</p>
+        </footer>
     </div>
 
+    <!-- JS 載入 -->
     <script>
         $(document).ready(function() {
             // 請求 API 並顯示資料
@@ -81,6 +95,7 @@
     </script>
 </body>
 </html>
+
 
 
 
