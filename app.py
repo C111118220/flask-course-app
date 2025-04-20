@@ -136,6 +136,40 @@ if __name__ == '__main__':
     app.run(host="0.0.0.0", port=port, debug=True)
 
 
+@app.route('/init_db')
+def init_db():
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({"error": "❌ 無法連接資料庫"}), 500
+
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS students (
+                    id SERIAL PRIMARY KEY,
+                    student_id VARCHAR(20) NOT NULL,
+                    name VARCHAR(100) NOT NULL,
+                    gender VARCHAR(10) NOT NULL,
+                    email VARCHAR(100),
+                    class VARCHAR(50)
+                );
+            """)
+
+            # ⚠️ 簡化測試資料（避免卡住）
+            cursor.execute("""
+                INSERT INTO students (student_id, name, gender, email, class) VALUES
+                ('C111118201', '張又允', '女', '', ''),
+                ('C111118202', '黃子軒', '男', '', ''),
+                ('C111118203', '李志明', '男', '', '')
+                ON CONFLICT DO NOTHING;
+            """)
+
+            conn.commit()
+        return jsonify({"message": "✅ 資料表建立並匯入資料成功"})
+    except Exception as e:
+        return jsonify({"error": str(e)})
+    finally:
+        conn.close()
 
 
 
